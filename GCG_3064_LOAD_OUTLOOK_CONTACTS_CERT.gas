@@ -1,0 +1,358 @@
+Program.Sub.ScreenSU.Start
+gui.F_Contacts..create
+gui.F_Contacts..caption("Outlook Contacts")
+gui.F_Contacts..size(17805,7725)
+gui.F_Contacts..minx(0)
+gui.F_Contacts..miny(0)
+gui.F_Contacts..position(0,0)
+gui.F_Contacts..event(unload,f_contacts_unload)
+gui.F_Contacts..alwaysontop(False)
+gui.F_Contacts..fontname("Arial")
+gui.F_Contacts..fontsize(8)
+gui.F_Contacts..forecolor(0)
+gui.F_Contacts..fontstyle(,,,,)
+gui.F_Contacts..BackColor(-2147483633)
+gui.F_Contacts..controlbox(True)
+gui.F_Contacts..maxbutton(False)
+gui.F_Contacts..minbutton(True)
+gui.F_Contacts..mousepointer(0)
+gui.F_Contacts..moveable(True)
+gui.F_Contacts..sizeable(False)
+gui.F_Contacts..ShowInTaskBar(True)
+gui.F_Contacts..titlebar(True)
+gui.F_Contacts.gsfg_Contacts.create(gsflexgrid)
+gui.F_Contacts.gsfg_Contacts.FixedRows(0)
+gui.F_Contacts.gsfg_Contacts.FixedCols(0)
+gui.F_Contacts.gsfg_Contacts.visible(True)
+gui.F_Contacts.gsfg_Contacts.size(17300,6510)
+gui.F_Contacts.gsfg_Contacts.zorder(0)
+gui.F_Contacts.gsfg_Contacts.position(95,155)
+gui.F_Contacts.gsfg_Contacts.enabled(True)
+gui.F_Contacts.gsfg_Contacts.event(mousedown,gsfg_contacts_mousedown)
+gui.F_Contacts.gsfg_Contacts.event(checkclick,gsfg_contacts_checkclick)
+gui.F_Contacts.cmd_Select.create(button)
+gui.F_Contacts.cmd_Select.caption("Select Contacts")
+gui.F_Contacts.cmd_Select.visible(True)
+gui.F_Contacts.cmd_Select.size(1350,435)
+gui.F_Contacts.cmd_Select.zorder(0)
+gui.F_Contacts.cmd_Select.position(100,6700)
+gui.F_Contacts.cmd_Select.enabled(True)
+gui.F_Contacts.cmd_Select.fontname("Arial")
+gui.F_Contacts.cmd_Select.fontsize(8)
+gui.F_Contacts.cmd_Select.event(click,cmd_select_click)
+gui.F_Contacts.cmd_Select.defaultvalue("")
+gui.F_Contacts.cmd_Select.controlgroup(0)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+V.UDT.Contact.Define("FName",String)
+V.UDT.Contact.Define("LName",String)
+V.UDT.Contact.Define("EmailAddr",String)
+V.UDT.Contact.Define("EmailDisplay",String)
+V.UDT.Contact.Define("JobTitle",String)
+V.UDT.Contact.Define("UF1",String)
+V.UDT.Contact.Define("UF2",String)
+V.UDT.Contact.Define("UF3",String)
+V.UDT.Contact.Define("UF4",String)
+V.UDT.Contact.Define("Categories",String)
+V.UDT.Contact.Define("CompanyName",String)
+V.UDT.Contact.Define("CustomerID",String)
+V.UDT.Contact.Define("Addr",String)
+V.UDT.Contact.Define("AddrStreet",String)
+V.UDT.Contact.Define("AddrCity",String)
+V.UDT.Contact.Define("AddrZip",String)
+V.UDT.Contact.Define("AddrState",String)
+V.UDT.Contact.Define("Telephone",String)
+V.UDT.Contact.Define("Mobile",String)
+Variable.UDT.Contact.Define("Check",Boolean)
+V.uGlobal.uContacts.Declare("Contact")
+Variable.Global.bSort.Declare(Boolean,True)
+Variable.Global.sCol.Declare(String)
+Variable.Global.iColLast.Declare(Long,0)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+F.Intrinsic.String.Split("*!*FName*!*LName*!*EmailAddr*!*EmailDisplay*!*CompanyName*!*AddrCity*!*AddrState*!*AddrZip*!*Telephone*!*Mobile","*!*",V.Global.sCol)
+F.Intrinsic.Control.CallSub(Init_gsfg_contacts)
+F.Intrinsic.Control.CallSub(Load_udt)
+Gui.F_Contacts..Show
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3064_LOAD_OUTLOOK_CONTACTS_CERT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(F_contacts_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+program.sub.cmd_select_click.start
+F.Intrinsic.Control.SetErrorHandler("cmd_select_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sRow.Declare(String)
+V.Local.iRow.Declare(Long)
+V.Local.iC.Declare(Long)
+V.Local.sTemp.Declare(String)
+
+F.Intrinsic.Math.Sub(V.Screen.F_Contacts!gsfg_Contacts.Rows,1,V.Local.iC)
+
+F.Intrinsic.Control.For(V.Local.iRow,0,V.Local.iC,1)
+	Gui.F_Contacts.gsfg_Contacts.ReadRow(V.Local.iRow,V.Local.sRow)
+	F.Intrinsic.String.Split(V.Local.sRow,"*!*",V.Local.sRow)
+	F.Intrinsic.Control.If(V.Local.sRow(0),=,1)
+		F.Intrinsic.Control.If(V.Local.sTemp.Trim,=,"")
+			V.Local.sTemp.Set(V.Local.sRow(3))
+		F.Intrinsic.Control.Else
+			F.Intrinsic.String.Build("{0}|~|{1}",V.Local.sTemp,V.Local.sRow(3),V.Local.sTemp)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Next(V.Local.iRow)
+
+F.Intrinsic.Control.If(V.Passed.Email-lstRecipients.Trim,=,"-1")
+	V.Passed.Email-lstRecipients.Set(V.Local.sTemp)
+F.Intrinsic.Control.Else
+	F.Intrinsic.String.Build("{0}|~|{1}",V.Passed.Email-lstRecipients,V.Local.sTemp,V.Passed.Email-lstRecipients)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.CallSub(F_contacts_unload)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmd_select_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3064_LOAD_OUTLOOK_CONTACTS_CERT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(F_contacts_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmd_select_click.end
+
+program.sub.f_contacts_unload.start
+F.Intrinsic.Control.SetErrorHandler("f_contacts_unload_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("f_contacts_unload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3064_LOAD_OUTLOOK_CONTACTS_CERT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.f_contacts_unload.end
+
+Program.Sub.init_gsfg_contacts.Start
+F.Intrinsic.Control.SetErrorHandler("init_gsfg_contacts_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.iC.Declare(Long)
+
+Gui.F_Contacts.gsfg_Contacts.Cols(11)
+Gui.F_Contacts.gsfg_Contacts.Rows(1)
+Gui.F_Contacts.gsfg_Contacts.FixedRows(1)
+
+'title buildstyle
+F.Intrinsic.Control.For(V.Local.iC,0,10,1)
+	Gui.F_Contacts.gsfg_Contacts.BuildStyle(1,V.Local.iC,"Format","Alignment",4)
+	Gui.F_Contacts.gsfg_Contacts.BuildStyle(1,V.Local.iC,"Type","Locked",True)
+F.Intrinsic.Control.Next(V.Local.iC)
+
+'data buildstyle
+Gui.F_Contacts.gsfg_Contacts.BuildStyle(2,0,"Type","Checkbox","")
+F.Intrinsic.Control.For(V.Local.iC,1,10,1)
+	Gui.F_Contacts.gsfg_Contacts.BuildStyle(2,V.Local.iC,"Format","Alignment",2)
+	Gui.F_Contacts.gsfg_Contacts.BuildStyle(2,V.Local.iC,"Type","Locked",True)
+F.Intrinsic.Control.Next(V.Local.iC)
+
+'titles
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(0,0,"Select")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(1,0,"First Name")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(2,0,"Last Name")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(3,0,"Email")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(4,0,"Display Name")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(5,0,"Company")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(6,0,"City")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(7,0,"State")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(8,0,"Zip")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(9,0,"Phone")
+Gui.F_Contacts.gsfg_Contacts.TextMatrix(10,0,"Mobile")
+
+Gui.F_Contacts.gsfg_Contacts.ApplyStyle(0,1)
+Gui.F_Contacts.gsfg_Contacts.ApplyStyle(1,2)
+Gui.F_Contacts.gsfg_Contacts.SetColumnPercentages(".04:.11:.11:.13:.13:.14:.11:.04:.04:.07:.07")
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("init_gsfg_contacts_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3064_LOAD_OUTLOOK_CONTACTS_CERT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(F_contacts_unload)
+Function.Intrinsic.Control.EndIf
+
+
+
+Program.Sub.init_gsfg_contacts.End
+
+Program.Sub.load_udt.Start
+F.Intrinsic.Control.SetErrorHandler("load_udt_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sContactList.Declare(String)
+V.Local.sRows.Declare(String)
+V.Local.sColumns.Declare(String)
+V.Local.iC.Declare(Long)
+
+'First name, Last name, Email address, Email display name, Job title,
+'User field 1, User field 2, User field 3, User field 4, Categories,
+'Company name, Customer ID, Business address, Business address Street, Business address city,
+'Business address zip code, Business address state, Business telephone number, Mobile phone number
+
+'gets all contact information from outlook
+F.Automation.MSOutlook.GetContactsExt(V.Local.sContactList)
+'if there is any contacts seperate them
+F.Intrinsic.Control.If(V.Local.sContactList,<>,"")
+	'seperate rows
+	F.Intrinsic.String.Split(V.Local.sContactList,"!*!",V.Local.sRows)
+	V.uGlobal.uContacts.Redim(0,V.Local.sRows.UBound)
+	'seperate columns from rows
+	F.Intrinsic.Control.For(V.Local.iC,0,V.Local.sRows.UBound,1)
+		F.Intrinsic.String.Split(V.Local.sRows(V.Local.iC),"*!*",V.Local.sColumns)
+		V.uGlobal.uContacts(V.Local.iC)!FName.Set(V.Local.sColumns(0))
+		V.uGlobal.uContacts(V.Local.iC)!LName.Set(V.Local.sColumns(1))
+		V.uGlobal.uContacts(V.Local.iC)!EmailAddr.Set(V.Local.sColumns(2))
+		V.uGlobal.uContacts(V.Local.iC)!EmailDisplay.Set(V.Local.sColumns(3))
+		V.uGlobal.uContacts(V.Local.iC)!CompanyName.Set(V.Local.sColumns(10))
+		V.uGlobal.uContacts(V.Local.iC)!AddrCity.Set(V.Local.sColumns(14))
+		V.uGlobal.uContacts(V.Local.iC)!AddrZip.Set(V.Local.sColumns(15))
+		V.uGlobal.uContacts(V.Local.iC)!AddrState.Set(V.Local.sColumns(16))
+		V.uGlobal.uContacts(V.Local.iC)!Telephone.Set(V.Local.sColumns(17))
+		V.uGlobal.uContacts(V.Local.iC)!Mobile.Set(V.Local.sColumns(18))
+		V.uGlobal.uContacts(v.Local.iC)!Check.Set(0)
+	F.Intrinsic.Control.Next(V.Local.iC)
+
+	'only show people with email address
+	F.Intrinsic.Variable.UDTMultiFlag(V.uGlobal.uContacts!EmailAddr,"")
+	F.Intrinsic.Variable.UDTDeleteFlagged(V.uGlobal.uContacts)
+	'populate flexgrid form udt
+	F.Intrinsic.Variable.UDTMultiQuickSort(V.uGlobal.uContacts!FName,False)
+	Gui.F_Contacts.gsfg_Contacts.LoadFromUDT("V.uGlobal.uContacts","Check::0*!*FName::1*!*LName::2*!*EmailAddr::3*!*EmailDisplay::4*!*CompanyName::5*!*AddrCity::6*!*AddrState::7*!*AddrZip::8*!*Telephone::9*!*Mobile::10",2)
+'if there are no contacts prompt and end program
+F.Intrinsic.Control.else
+	F.Intrinsic.UI.Msgbox("No outlook contacts where found.","GCG_3064_LOAD_OUTLOOK_CONTACTS_CERT.gas")
+	F.Intrinsic.Control.CallSub(F_contacts_unload)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("load_udt_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3064_LOAD_OUTLOOK_CONTACTS_CERT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(F_contacts_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.load_udt.End
+
+program.sub.gsfg_contacts_mousedown.start
+F.Intrinsic.Control.SetErrorHandler("gsfg_contacts_mousedown_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+Variable.Local.iCurrentCol.Declare(Long)
+Variable.Local.iRows.Declare(Long)
+
+V.Local.iCurrentCol.Set(V.Args.MouseCol)
+V.Local.iRows.Set(V.Args.MouseRow)
+'if not title or select sort the column
+F.Intrinsic.Control.If(V.Local.iRows,=,0,"AND",V.Local.iCurrentCol,!=,0)
+	'checks to see if it was preveously sorted and sort the opposite
+	F.Intrinsic.Control.If(V.Global.iColLast,=,V.Local.iCurrentCol)
+		V.Global.bSort.Set(False)
+		V.Global.iColLast.Set(0)
+	F.Intrinsic.Control.Else
+		V.Global.bSort.Set(True)
+		V.Global.iColLast.Set(V.Local.iCurrentCol)
+	F.Intrinsic.Control.EndIf
+	'sort by the column
+	f.Intrinsic.Variable.UDTMultiQuickSort(v.uGlobal.uContacts![v.Global.sCol(v.local.iCurrentCol)],v.Global.bSort)
+	Gui.F_Contacts.gsfg_Contacts.Visible(false)
+	F.Intrinsic.Control.CallSub(Init_gsfg_contacts)
+	'repopulate flexgrid
+	Gui.F_Contacts.gsfg_Contacts.LoadFromUDT("V.uGlobal.uContacts","Check::0*!*FName::1*!*LName::2*!*EmailAddr::3*!*EmailDisplay::4*!*CompanyName::5*!*AddrCity::6*!*AddrState::7*!*AddrZip::8*!*Telephone::9*!*Mobile::10",2)
+	Gui.F_Contacts.gsfg_Contacts.Visible(true)
+	'moves the view back to the top of the flexgrid
+	Gui.F_Contacts.gsfg_Contacts.SetActiveCell(1,1)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("gsfg_contacts_mousedown_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3064_LOAD_OUTLOOK_CONTACTS_CERT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(F_contacts_unload)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.gsfg_contacts_mousedown.end
+
+program.sub.gsfg_contacts_checkclick.start
+F.Intrinsic.Control.SetErrorHandler("gsfg_contacts_checkclick_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.iRow.Declare(Long)
+V.Local.sRow.Declare(String)
+
+V.Local.iRow.Set(V.Args.Key)
+Gui.F_Contacts.gsfg_Contacts.Commit
+'reads row at clicked checkbox and saves it to the udt so if you sort it stays in the correct location.
+Gui.F_Contacts.gsfg_Contacts.ReadRow(V.Local.iRow,V.Local.sRow)
+F.Intrinsic.String.Split(V.Local.sRow,"*!*",V.Local.sRow)
+F.Intrinsic.Math.Sub(V.Local.iRow,1,V.Local.iRow)
+V.uGlobal.uContacts(v.local.iRow)!Check.Set(V.Local.sRow(0))
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("gsfg_contacts_checkclick_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_3064_LOAD_OUTLOOK_CONTACTS_CERT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.gsfg_contacts_checkclick.end
+
+Program.Sub.Comments.Start
+${$0$}$ATG_LOAD_OUTLOOK_CONTACTS$}$Strider$}$7/16/2015
+${$1$}$$}$$}$0$}$42200$}$report email browser$}$11/30/2015 8:28:07 AM$}$
+${$3$}$0$}$$}$-1$}$-1$}$$}$1/1/1900$}$The function, F.Automation.MSOutlook.GetContactsExt, will return a user's Outlook Contacts in a double delimited string.
+
+These should be loaded into a GS Flex grid with the first column as check boxes.
+
+A "Select recipients" button will concatenate all the selected names from the Flex Grid into a comma separated string and pass that string to a variable.
+Program.Sub.Comments.End
+
